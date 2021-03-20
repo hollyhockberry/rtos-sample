@@ -37,42 +37,34 @@ bool DisplayTask::Delay(int milliseconds) {
     return (rest > 0) ? Delay(rest) : false;
   }
   show_ = message;
+  if (v_ < 0) v_ = 0;
+  if (v_ > 255) v_ = 255;
   return true;
 }
 
 bool DisplayTask::Loop() {
   if (show_) {
-    TurnOn();
+    Transition(false);
   } else if (v_ > 0) {
-    TurnOff();
+    Transition(true);
   } else {
     Delay(0);
   }
   return true;
 }
 
-void DisplayTask::TurnOn() {
+void DisplayTask::Transition(bool off, int delta) {
   for (; h_ < 255; ++h_) {
     for (int i = 0; i < ledCount_; ++i) {
       display_->drawpix(i, CRGB(CHSV((h_ + i) % 255, 255, v_)));
     }
     if (Delay(20)) return;
-    if (v_ < 255) v_ += 5;
-  }
-  h_ = 0;
-}
-
-void DisplayTask::TurnOff() {
-  for (; h_ < 255; ++h_) {
-    for (int i = 0; i < ledCount_; ++i) {
-      display_->drawpix(i, CRGB(CHSV((h_ + i) % 255, 255, v_)));
+    if (off) {
+      v_ -= delta;
+      if (v_ < 0) return;
+    } else {
+      if (v_ < 255) v_ += delta;
     }
-    v_ -= 5;
-    if (v_ < 0) {
-      v_ = 0;
-      return;
-    }
-    if (Delay(20)) return;
   }
   h_ = 0;
 }

@@ -21,8 +21,7 @@ class DisplayTask : public TaskBase {
   int h_, v_;
 
   bool Delay(int milliseconds);
-  void TurnOn();
-  void TurnOff();
+  void Transition(bool off, int delta = 5);
 };
 
 #endif  // DISPLAYTASK_H_
