@@ -6,7 +6,7 @@
 DisplayTask::DisplayTask(MailboxPool* mailbox,
                          LED_Display* display, int ledCount)
 : TaskBase(TID_DISPLAY, mailbox, 10, sizeof(bool)),
-display_(display), ledCount_(ledCount), show_(false) {
+display_(display), ledCount_(ledCount), show_(false), h_(0), v_(0) {
 }
 
 namespace {
@@ -19,28 +19,60 @@ void show(LED_Display* display, int count, CRGB color) {
 
 void DisplayTask::Initialize() {
   show_ = false;
-  show(display_, ledCount_, 0);
+  h_ = v_ = 0;
+
+  for (int i = 0; i < ledCount_; ++i) {
+    display_->drawpix(i, 0);
+  }
 }
 
 bool DisplayTask::Delay(int milliseconds) {
-  if (!ReceiveMessage(&show_, milliseconds)) {
+  bool message;
+  int now = ::millis();
+  if (!ReceiveMessage(&message, milliseconds)) {
     return false;
   }
+  if (show_ == message) {
+    int rest = ::millis() - now - milliseconds;
+    return (rest > 0) ? Delay(rest) : false;
+  }
+  show_ = message;
   return true;
 }
 
 bool DisplayTask::Loop() {
-  if (!show_) {
-    show(display_, ledCount_, 0);
-    Delay(20);
+  if (show_) {
+    TurnOn();
+  } else if (v_ > 0) {
+    TurnOff();
   } else {
-    for (int h = 0; h < 255; ++h) {
-      for (int i = 0; i < ledCount_; ++i) {
-        display_->drawpix(i, CRGB(CHSV((h + i) % 255, 255,255)));
-      }
-      if (Delay(20)) return true;
-    }
+    Delay(0);
   }
-
   return true;
+}
+
+void DisplayTask::TurnOn() {
+  for (; h_ < 255; ++h_) {
+    for (int i = 0; i < ledCount_; ++i) {
+      display_->drawpix(i, CRGB(CHSV((h_ + i) % 255, 255, v_)));
+    }
+    if (Delay(20)) return;
+    if (v_ < 255) v_ += 5;
+  }
+  h_ = 0;
+}
+
+void DisplayTask::TurnOff() {
+  for (; h_ < 255; ++h_) {
+    for (int i = 0; i < ledCount_; ++i) {
+      display_->drawpix(i, CRGB(CHSV((h_ + i) % 255, 255, v_)));
+    }
+    v_ -= 5;
+    if (v_ < 0) {
+      v_ = 0;
+      return;
+    }
+    if (Delay(20)) return;
+  }
+  h_ = 0;
 }

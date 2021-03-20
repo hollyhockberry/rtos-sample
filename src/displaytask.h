@@ -18,8 +18,11 @@ class DisplayTask : public TaskBase {
   LED_Display* display_;
   const int ledCount_;
   bool show_;
+  int h_, v_;
 
   bool Delay(int milliseconds);
+  void TurnOn();
+  void TurnOff();
 };
 
 #endif  // DISPLAYTASK_H_
