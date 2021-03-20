@@ -11,13 +11,14 @@ class DisplayTask : public TaskBase {
   DisplayTask(MailboxPool* mailbox, LED_Display* display, int ledCount);
 
  protected:
+  void Initialize() override;
+  bool Loop() override;
+
+ private:
   LED_Display* display_;
   const int ledCount_;
   bool show_;
-  void Initialize() override;
-  bool Loop() override;
- 
- private:
+
   bool Delay(int milliseconds);
 };
 
