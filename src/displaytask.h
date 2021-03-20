@@ -13,8 +13,12 @@ class DisplayTask : public TaskBase {
  protected:
   LED_Display* display_;
   const int ledCount_;
+  bool show_;
   void Initialize() override;
   bool Loop() override;
+ 
+ private:
+  bool Delay(int milliseconds);
 };
 
 #endif  // DISPLAYTASK_H_
